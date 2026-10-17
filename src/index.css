@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .grid-cols-13 {
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+  }
+}
+
+/* Custom sleek scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #121418;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b323f;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3c4557;
+}

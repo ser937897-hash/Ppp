@@ -1,0 +1,6 @@
+{
+  "name": "Poker Analyzer & EV Overlay",
+  "description": "Профессиональный покерный анализатор эквити, аутов и EV с фильтром диапазона соперников и режимом плавающего оверлея.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
