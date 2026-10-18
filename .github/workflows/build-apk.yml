@@ -32,6 +32,7 @@ jobs:
       - name: Create Android project
         run: |
           npx cap add android
+          python3 scripts/inject-android.py
           npx cap sync android
 
       - name: Build debug APK

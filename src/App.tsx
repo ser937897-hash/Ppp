@@ -15,6 +15,36 @@ import {
   Code2,
 } from 'lucide-react';
 
+// Мост к нативному плагину FloatingOverlay (есть только в Android-приложении)
+interface OverlayPlugin {
+  checkPermission: () => Promise<{ granted: boolean }>;
+  requestPermission: () => Promise<void>;
+  start: (opts: { state: string; moveToBack?: boolean }) => Promise<void>;
+  stop: () => Promise<void>;
+}
+
+interface CapacitorGlobal {
+  isNativePlatform?: () => boolean;
+  getPlatform?: () => string;
+  registerPlugin?: (name: string) => unknown;
+}
+
+const capacitor = (): CapacitorGlobal | undefined =>
+  (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
+
+const isNativeAndroid = (): boolean => {
+  const cap = capacitor();
+  return !!cap?.isNativePlatform?.() && cap.getPlatform?.() === 'android';
+};
+
+let overlayPluginInstance: OverlayPlugin | null = null;
+const getOverlayPlugin = (): OverlayPlugin => {
+  if (!overlayPluginInstance) {
+    overlayPluginInstance = capacitor()?.registerPlugin?.('FloatingOverlay') as OverlayPlugin;
+  }
+  return overlayPluginInstance;
+};
+
 export default function App() {
   const [slots, setSlots] = useState<(number | null)[]>(new Array(25).fill(null));
   const [activeSlotIndex, setActiveSlotIndex] = useState<number>(0);
@@ -177,6 +207,43 @@ export default function App() {
     }
   };
 
+  // В Android-приложении (Capacitor) оверлей — нативное окно поверх других программ.
+  // В обычном браузере остаётся прежний плавающий виджет внутри страницы.
+  const launchNativeOverlay = async () => {
+    try {
+      const Overlay = getOverlayPlugin();
+      const { granted } = await Overlay.checkPermission();
+      if (!granted) {
+        window.alert(
+          'Чтобы виджет работал поверх других приложений, включите для этого приложения разрешение «Поверх других окон», затем вернитесь и нажмите кнопку ещё раз.'
+        );
+        await Overlay.requestPermission();
+        return;
+      }
+      await Overlay.start({
+        state: JSON.stringify({
+          slots,
+          activeSlotIndex,
+          opponentsCount,
+          oppRangePercent,
+          potInput,
+          callInput,
+        }),
+        moveToBack: true,
+      });
+    } catch (e) {
+      window.alert('Не удалось запустить оверлей: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const handleLaunchOverlay = () => {
+    if (isNativeAndroid()) {
+      void launchNativeOverlay();
+    } else {
+      setIsOverlayMode(true);
+    }
+  };
+
   const toggleSound = () => {
     soundManager.enabled = !soundEnabled;
     setSoundEnabled(!soundEnabled);
@@ -228,7 +295,7 @@ export default function App() {
           {/* Mode Switcher */}
           <button
             type="button"
-            onClick={() => setIsOverlayMode(!isOverlayMode)}
+            onClick={() => (isOverlayMode ? setIsOverlayMode(false) : handleLaunchOverlay())}
             className={`
               flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer
               ${
@@ -308,7 +375,7 @@ export default function App() {
             <div className="lg:col-span-6 xl:col-span-5 w-full bg-[#16191F] border border-[#232833] rounded-2xl p-3 sm:p-4 shadow-xl">
               <PokerAnalyzerContent
                 isOverlayMode={false}
-                onLaunchOverlay={() => setIsOverlayMode(true)}
+                onLaunchOverlay={handleLaunchOverlay}
                 onCloseOverlay={() => {}}
                 slots={slots}
                 onSlotsChange={setSlots}
