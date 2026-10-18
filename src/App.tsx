@@ -16,17 +16,13 @@ import {
 } from 'lucide-react';
 
 // Мост к нативному плагину FloatingOverlay (есть только в Android-приложении)
-interface OverlayPlugin {
-  checkPermission: () => Promise<{ granted: boolean }>;
-  requestPermission: () => Promise<void>;
-  start: (opts: { state: string; moveToBack?: boolean }) => Promise<void>;
-  stop: () => Promise<void>;
-}
+type PluginMethod = (options?: unknown) => Promise<unknown>;
 
 interface CapacitorGlobal {
   isNativePlatform?: () => boolean;
   getPlatform?: () => string;
-  registerPlugin?: (name: string) => unknown;
+  nativePromise?: (plugin: string, method: string, options?: unknown) => Promise<unknown>;
+  Plugins?: Record<string, Record<string, PluginMethod> | undefined>;
 }
 
 const capacitor = (): CapacitorGlobal | undefined =>
@@ -37,12 +33,23 @@ const isNativeAndroid = (): boolean => {
   return !!cap?.isNativePlatform?.() && cap.getPlatform?.() === 'android';
 };
 
-let overlayPluginInstance: OverlayPlugin | null = null;
-const getOverlayPlugin = (): OverlayPlugin => {
-  if (!overlayPluginInstance) {
-    overlayPluginInstance = capacitor()?.registerPlugin?.('FloatingOverlay') as OverlayPlugin;
+// Страница не подключает @capacitor/core, поэтому вызываем плагин напрямую
+// через объект Capacitor, который в страницу встраивает сам нативный мост.
+const callOverlay = async <T,>(
+  method: string,
+  options: Record<string, unknown> = {}
+): Promise<T> => {
+  const cap = capacitor();
+  const direct = cap?.Plugins?.FloatingOverlay?.[method];
+  if (direct) {
+    return (await direct(options)) as T;
   }
-  return overlayPluginInstance;
+  if (cap?.nativePromise) {
+    return (await cap.nativePromise('FloatingOverlay', method, options)) as T;
+  }
+  throw new Error(
+    'нативный мост Capacitor недоступен (' + Object.keys(cap ?? {}).join(', ') + ')'
+  );
 };
 
 export default function App() {
@@ -211,16 +218,15 @@ export default function App() {
   // В обычном браузере остаётся прежний плавающий виджет внутри страницы.
   const launchNativeOverlay = async () => {
     try {
-      const Overlay = getOverlayPlugin();
-      const { granted } = await Overlay.checkPermission();
+      const { granted } = await callOverlay<{ granted: boolean }>('checkPermission');
       if (!granted) {
         window.alert(
           'Чтобы виджет работал поверх других приложений, включите для этого приложения разрешение «Поверх других окон», затем вернитесь и нажмите кнопку ещё раз.'
         );
-        await Overlay.requestPermission();
+        await callOverlay('requestPermission');
         return;
       }
-      await Overlay.start({
+      await callOverlay('start', {
         state: JSON.stringify({
           slots,
           activeSlotIndex,
