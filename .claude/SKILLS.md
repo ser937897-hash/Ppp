@@ -3,6 +3,15 @@
 - `.claude/skills/` — 311 skills from [everything-claude-code](https://github.com/affaan-m/everything-claude-code) (full profile, hooks disabled) + 15 skills from [anthropics/skills](https://github.com/anthropics/skills)
 - `.claude/agents/`, `.claude/commands/`, `.claude/rules/ecc/` — ECC agents, slash commands and rules
 
+## Writers agency (`/writers-agency`)
+
+A team of professional writers and editors for any text: articles, longreads,
+essays, books, short stories, scripts, posts. Run `/writers-agency` or just ask
+to write or edit something. Agents: `brief-strategist`, `researcher-factchecker`,
+`nonfiction-author`, `fiction-author`, `scriptwriter`, `developmental-editor`,
+`line-editor`, `copy-editor`, `continuity-editor`, `beta-reader`. Projects are
+kept in `writing/<slug>/`.
+
 Sessions opened on this repo load them automatically.
 
 To make them available in **every** session (any repo), add this to the cloud
