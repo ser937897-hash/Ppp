@@ -12,6 +12,16 @@ to write or edit something. Agents: `brief-strategist`, `researcher-factchecker`
 `line-editor`, `copy-editor`, `continuity-editor`, `beta-reader`. Projects are
 kept in `writing/<slug>/`.
 
+### Engagement lab (`/engagement-lab`) and book reviews (`/book-review`)
+
+The writers agency's quality department, used as stage 6 of the pipeline or on
+its own to make a manuscript more gripping: `quality-auditor` (scored rubric and
+delivery thresholds), `tension-editor` (hooks, stakes, open loops, pacing),
+`character-doctor`, `dialogue-doctor`, `prose-stylist` and
+`opening-ending-specialist`. `/book-review` writes internal reader's reports,
+public reviews, short reviews and blurbs with `literary-critic`,
+`quality-auditor` and `beta-reader`.
+
 Sessions opened on this repo load them automatically.
 
 To make them available in **every** session (any repo), add this to the cloud
